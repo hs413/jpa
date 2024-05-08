@@ -5,6 +5,7 @@ import jpa.springboot.domain.DeliveryStatus;
 import jpa.springboot.domain.Member;
 import jpa.springboot.domain.Order;
 import jpa.springboot.domain.OrderItem;
+import jpa.springboot.domain.OrderSearch;
 import jpa.springboot.domain.item.Item;
 import jpa.springboot.repository.ItemRepository;
 import jpa.springboot.repository.MemberRepository;
@@ -12,6 +13,8 @@ import jpa.springboot.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -55,8 +58,7 @@ public class OrderService {
     }
 
     /** 주문 검색 **/
-    /*
-     * public List<Order> findOrders(OrderSearch ordersearch) {
-     *   return orderRepository.findAll(orderSearch);
-     * }*/
+    public List<Order> findOrders(OrderSearch ordersearch) {
+        return orderRepository.findAll(ordersearch);
+    }
 }
