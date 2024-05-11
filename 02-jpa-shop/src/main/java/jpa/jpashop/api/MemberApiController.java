@@ -6,11 +6,15 @@ import jpa.jpashop.service.MemberService;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -44,6 +48,19 @@ public class MemberApiController {
         return new CreateMemberResponse(id);
     }
 
+    @Data
+    static class CreateMemberRequest {
+        private String name;
+    }
+
+    @Data
+    static class CreateMemberResponse{
+        private Long id;
+        public CreateMemberResponse(Long id) {
+            this.id = id;
+        }
+    }
+
 
     /**
      * command와 query는 분리하는 것이 좋음 -> 유지보수성 증가
@@ -60,23 +77,6 @@ public class MemberApiController {
         return new UpdateMemberResponse(findMember.getId(), findMember.getName());
     }
 
-
-
-
-
-    @Data
-    static class CreateMemberRequest {
-        private String name;
-    }
-
-    @Data
-    static class CreateMemberResponse{
-        private Long id;
-        public CreateMemberResponse(Long id) {
-            this.id = id;
-        }
-    }
-
     @Data
     static class UpdateMemberRequest {
         private String name;
@@ -86,6 +86,45 @@ public class MemberApiController {
     @AllArgsConstructor
     static class UpdateMemberResponse {
         private Long id;
+        private String name;
+    }
+
+    /**
+     * 조회 V1 : 응답 값으로 엔티티를 직접 외부에 반환
+     * - 엔티티에 프레젠테이션 계층을 위한 로직이 추가 된다. (@JsonIgnore 등)
+     * - 엔티티의 모든 값 노출 -> 성능 및 보안 문제
+     * - 항후 API 스펙 변경이 어려움
+     */
+    @GetMapping("/api/v1/members")
+    public List<Member> membersV1() {
+        return memberService.findMembers();
+    }
+
+    /**
+     * 조회 V2: 응답 값으로 엔티티가 아닌 별도의 DTO를 반환
+     * - 엔티티가 변해도 API 스펙이 변경되지 않는다.
+     * - 향후 필요한 필드를 추가할 수 있다.
+     */
+    @GetMapping("/api/v2/members")
+    public Result membersV2() {
+        List<Member> findMembers = memberService.findMembers();
+        List<MemberDto> collect = findMembers.stream()
+            .map(m -> new MemberDto(m.getName()))
+            .collect(Collectors.toList());
+
+        return new Result(collect.size(), collect);
+    }
+
+    @Data
+    @AllArgsConstructor
+    static class Result<T> {
+        private int count;
+        private T data;
+    }
+
+    @Data
+    @AllArgsConstructor
+    static class MemberDto {
         private String name;
     }
 }
