@@ -16,4 +16,4 @@ spring:
 logging:
   level:
     org.hibernate.SQL: debug # hibernate 생성 sql
-    org.hibernate.orm.jdbc.bind: trace  # hibernate 쿼리 파라 미터
+    org.hibernate.orm.jdbc.bind: off  # hibernate 쿼리 파라미터

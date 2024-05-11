@@ -1,6 +1,5 @@
 package jpa.jpashop.domain;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -11,7 +10,6 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 import jpa.jpashop.domain.item.Item;
 import lombok.Getter;
 import lombok.Setter;
