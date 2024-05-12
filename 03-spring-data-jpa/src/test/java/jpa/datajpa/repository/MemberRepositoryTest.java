@@ -7,6 +7,10 @@ import jpa.datajpa.entity.Team;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Rollback;
 
 import java.util.Arrays;
@@ -116,4 +120,60 @@ class MemberRepositoryTest {
             System.out.println("member = " + member);
         }
     }
+
+    private void pagingTestInit() {
+        memberRepository.save(new Member("member1", 10, null));
+        memberRepository.save(new Member("member2", 10, null));
+        memberRepository.save(new Member("member3", 10, null));
+        memberRepository.save(new Member("member4", 10, null));
+        memberRepository.save(new Member("member5", 10, null));
+    }
+
+    @Test
+    public void paging() throws Exception {
+        // given
+        pagingTestInit();
+        PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+
+        // when
+        Page<Member> page = memberRepository.findByAge(10, pageRequest);
+
+        // then
+        List<Member> content = page.getContent(); // 조회 데이터
+
+        assertThat(content).hasSize(3); // 조회 데이터 수
+        assertThat(page.getTotalElements()).isEqualTo(5); // 전체 데이터 수
+        assertThat(page.getNumber()).isEqualTo(0); // 페이지 번호
+        assertThat(page.getTotalPages()).isEqualTo(2); // 전체 페이지 번호
+        assertThat(page.isFirst()).isTrue();
+        assertThat(page.hasNext()).isTrue();
+    }
+
+    /**
+     * Slice 사용 paging
+     * - 전체 데이터, 페이지 번호 확인 X
+     * - 무한 스크롤, 자동으로 다음 게시물을 보여주는 방식 등에서 사용
+     * - count 쿼리 발생 X
+     * - limit + 1을 조회
+     * */
+    /*@Test
+    public void paging() throws Exception {
+        // given
+        pagingTestInit();
+        PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+
+        // when
+        Slice<Member> page = memberRepository.findByAge(10, pageRequest);
+
+        // then
+        List<Member> content = page.getContent(); // 조회 데이터
+
+        assertThat(content).hasSize(3); // 조회 데이터 수
+        assertThat(page.getNumber()).isEqualTo(0); // 페이지 번호
+        assertThat(page.isFirst()).isTrue();
+        assertThat(page.hasNext()).isTrue();
+
+//        assertThat(page.getTotalElements()).isEqualTo(5); // 전체 데이터 수
+//        assertThat(page.getTotalPages()).isEqualTo(2); // 전체 페이지 번호
+    }*/
 }
