@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -70,4 +71,16 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
             countQuery = "select count(m) from Member m")
     Page<Member> findByAge(int age, Pageable pageable);
 
+
+    /**
+     * 벌크성 수정
+     * - 벌크 연산은 영속성 컨텍스트를 무시하고 db에 바로 반영
+     * - 벌크 연산 이후에는 영속성 컨텍스트를 초기화 해야 한다.
+     * - clearAutomatically = true 옵션 추가 시 flush + clear 작업을 한다
+     * ** 권장사항
+     * - 영속성 컨텍스트에 엔티티가 없는 상태에서 벌크 연산 실행을 권장
+     * */
+    @Modifying(clearAutomatically = true)
+    @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
+    int bulkAgePlus(@Param("age") int age);
 }

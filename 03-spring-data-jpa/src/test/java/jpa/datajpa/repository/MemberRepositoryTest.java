@@ -68,8 +68,8 @@ class MemberRepositoryTest {
 
     @Test
     public void findByUsernameAndAgeGreaterThan() {
-        Member member1 = new Member("member1", 10, null);
-        Member member2 = new Member("member1", 20, null);
+        Member member1 = new Member("member1", 10);
+        Member member2 = new Member("member1", 20);
         memberRepository.save(member1);
         memberRepository.save(member2);
 
@@ -81,8 +81,8 @@ class MemberRepositoryTest {
 
     @Test
     public void findUsernameList() {
-        Member m1 = new Member("AAA", 10, null);
-        Member m2 = new Member("BBB", 20, null);
+        Member m1 = new Member("AAA", 10);
+        Member m2 = new Member("BBB", 20);
 
         memberRepository.save(m1);
         memberRepository.save(m2);
@@ -109,8 +109,8 @@ class MemberRepositoryTest {
 
     @Test
     public void findByNames() {
-        Member m1 = new Member("AAA", 10, null);
-        Member m2 = new Member("BBB", 20, null);
+        Member m1 = new Member("AAA", 10);
+        Member m2 = new Member("BBB", 20);
         memberRepository.save(m1);
         memberRepository.save(m2);
 
@@ -122,11 +122,11 @@ class MemberRepositoryTest {
     }
 
     private void pagingTestInit() {
-        memberRepository.save(new Member("member1", 10, null));
-        memberRepository.save(new Member("member2", 10, null));
-        memberRepository.save(new Member("member3", 10, null));
-        memberRepository.save(new Member("member4", 10, null));
-        memberRepository.save(new Member("member5", 10, null));
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 10));
+        memberRepository.save(new Member("member3", 10));
+        memberRepository.save(new Member("member4", 10));
+        memberRepository.save(new Member("member5", 10));
     }
 
     @Test
@@ -176,4 +176,20 @@ class MemberRepositoryTest {
 //        assertThat(page.getTotalElements()).isEqualTo(5); // 전체 데이터 수
 //        assertThat(page.getTotalPages()).isEqualTo(2); // 전체 페이지 번호
     }*/
+
+    @Test
+    public void bulkUpdate() {
+        // given
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 19));
+        memberRepository.save(new Member("member3", 20));
+        memberRepository.save(new Member("member4", 21));
+        memberRepository.save(new Member("member5", 40));
+
+        // when
+        int resultCount = memberRepository.bulkAgePlus(20);
+
+        // then
+        assertThat(resultCount).isEqualTo(3);
+    }
 }
