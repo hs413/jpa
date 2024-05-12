@@ -1,5 +1,6 @@
 package jpa.datajpa.repository;
 
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import jpa.datajpa.entity.Member;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Rollback(value = false)
 class MemberJpaRepositoryTest {
     @Autowired MemberJpaRepository memberRepository;
+    @Autowired
+    EntityManager em;
 
     @Test
     public void testMember() {
@@ -105,5 +108,25 @@ class MemberJpaRepositoryTest {
 
         // then
         assertThat(resultCount).isEqualTo(3);
+    }
+
+    @Test
+    public void JpaEventBaseEntity() throws Exception {
+        // given
+        Member member = new Member("member1");
+        memberRepository.save(member); // @Prepersist
+
+        Thread.sleep(100);
+        member.setUsername("member2");
+
+        em.flush();
+        em.clear();
+
+        // when
+        Member findMember = memberRepository.findById(member.getId()).get();
+
+        // then
+        System.out.println("findMember.createDate = " + findMember.getCreatedDate());
+//        System.out.println("findMember.updateDate = " + findMember.getUpdatedDate());
     }
 }
