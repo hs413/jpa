@@ -1,5 +1,6 @@
 package jpa.datajpa.repository;
 
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import jpa.datajpa.dto.MemberDto;
 import jpa.datajpa.entity.Member;
@@ -25,6 +26,8 @@ class MemberRepositoryTest {
     @Autowired MemberRepository memberRepository;
     @Autowired
     private TeamJpaRepository teamRepository;
+    @Autowired
+    EntityManager em;
 
     @Test
     public void testMember() {
@@ -191,5 +194,55 @@ class MemberRepositoryTest {
 
         // then
         assertThat(resultCount).isEqualTo(3);
+    }
+
+    @Test
+    public void findMemberLazy() {
+        // given
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+
+        Member member1 = new Member("member1", 10, teamA);
+        Member member2 = new Member("member2", 10, teamB);
+
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        em.flush();
+        em.clear();
+
+        // when
+        /**
+         * 지연 로딩
+         * - 연관 객체(team)를 프록시로 가져 옴
+         * - 객체를 탐색 할 때 DB에서 조회
+         * - 다수의 쿼리 발생으로 성능 저하
+         * */
+//        List<Member> members = memberRepository.findAll();
+
+        /**
+         * 즉시 로딩 (JPQL)
+         * - 연관 객체(team)를 한번에 조회
+         * - 쿼리가 한 번만 발생 -> 성능 향상
+         * */
+//        List<Member> members1 = memberRepository.findMemberFetchJoin();
+
+        /**
+         * EntityGraph 사용
+         * */
+        List<Member> members = memberRepository.findEntityGraphByUsername("member1");
+
+
+        for (Member member : members) {
+            System.out.println("member = " + member.getUsername());
+            System.out.println("member.teamClass = " + member.getTeam().getClass());
+            System.out.println("member.team = " + member.getTeam().getName());
+        }
+
+        // then
+
     }
 }
