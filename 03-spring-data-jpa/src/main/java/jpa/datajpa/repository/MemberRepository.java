@@ -1,14 +1,12 @@
 package jpa.datajpa.repository;
 
+import jakarta.persistence.QueryHint;
 import jpa.datajpa.dto.MemberDto;
 import jpa.datajpa.entity.Member;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
@@ -106,4 +104,12 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     // 메서드 이름으로 쿼리 생성 방식을 사용 -> 간단한 쿼리에서 사용
     @EntityGraph(attributePaths = {"team"})
     List<Member> findEntityGraphByUsername(@Param("username") String username);
+
+
+    /**
+     * JPA Hint
+     * */
+    // 변경 감지를 체크하지 않음
+    @QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true"))
+    Member findReadOnlyByUsername(String username);
 }
