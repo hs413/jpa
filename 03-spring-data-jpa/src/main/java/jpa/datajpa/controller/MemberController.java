@@ -40,7 +40,7 @@ public class MemberController {
     }
 
     // DTO 반환
-    @GetMapping("/members")
+    @GetMapping("/members-v3")
     public Page<MemberDto> list3(@PageableDefault(size=5) Pageable pageable) {
         return memberRepository.findAll(pageable)
             .map(MemberDto::new);
