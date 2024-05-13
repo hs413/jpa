@@ -2,6 +2,7 @@ package jpa.querydsl.basic;
 
 import com.querydsl.core.Tuple;
 import jpa.querydsl.entity.Member;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -10,11 +11,13 @@ import static jpa.querydsl.entity.QMember.member;
 import static jpa.querydsl.entity.QTeam.team;
 import static org.assertj.core.api.Assertions.assertThat;
 
+
+/**
+ * 페이징 및 집합(집계), groupby, having 테스트
+ * */
 public class PagingAggregationTest extends BasicTestInit {
-    /**
-     * 페이징 - 조회 수 제한
-     * */
     @Test
+    @DisplayName("페이징 - 조회 수 제한")
     public void paging1() {
         List<Member> result = queryFactory
                 .selectFrom(member)
@@ -29,10 +32,7 @@ public class PagingAggregationTest extends BasicTestInit {
         // fetchResults는 deprecated
     }
 
-    /**
-     * 집합 함수
-     */
-    @Test
+    @DisplayName("집합 함수 테스트")
     public void aggregation() {
         List<Tuple> result = queryFactory
                 .select(
@@ -53,10 +53,8 @@ public class PagingAggregationTest extends BasicTestInit {
         assertThat(tuple.get(member.age.min())).isEqualTo(10);
     }
 
-    /**
-     * groupBy, having
-     */
     @Test
+    @DisplayName("groupBy, having 절 테스트")
     public void group() throws Exception {
         List<Tuple> result = queryFactory
                 .select(team.name, member.age.avg())
@@ -65,10 +63,11 @@ public class PagingAggregationTest extends BasicTestInit {
                 .groupBy(team.name)
                 .having(member.age.avg().gt(20))
                 .fetch();
-
+        // groupByTest
 //        Tuple teamA = result.get(0);
         Tuple teamB = result.get(0);
 
+        // groupByTest
 //        assertThat(teamA.get(team.name)).isEqualTo("TeamA");
 //        assertThat(teamA.get(member.age.avg())).isEqualTo(15);
 

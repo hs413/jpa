@@ -11,14 +11,14 @@ import java.util.List;
 import static jpa.querydsl.entity.QMember.member;
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * 서브 쿼리 테스트
+ * - JPA JPQL, Qeurydsl은 from 절의 서브쿼리(인라인 뷰)를 지원 안함
+ *   - 서브쿼리를 join으로 변경 후 조회 → 불가능한 경우도 있음
+ *   - 쿼리를 분리해서 2번 조회
+ *   - nativeSQL 사용
+ * */
 public class SubQueryTest extends BasicTestInit{
-    /**
-     * 서브 쿼리
-     * - JPA JPQL, Qeurydsl은 from 절의 서브쿼리(인라인 뷰)를 지원 안함
-     *    - 서브쿼리를 join으로 변경 → 불가능한 경우도 있음
-     *    - 쿼리를 2번 분리해서 실행
-     *    - nativeSQL을 사용한다
-     * */
     @Test
     @DisplayName("eq : 나이가 가장 많은 회원 조회")
     public void subQuery() throws Exception {
