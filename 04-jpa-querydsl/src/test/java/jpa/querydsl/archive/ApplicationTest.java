@@ -1,4 +1,4 @@
-package jpa.querydsl;
+package jpa.querydsl.archive;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
