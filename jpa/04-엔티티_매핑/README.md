@@ -192,4 +192,4 @@ public class Board {
   - DB에 저장 및 조회하지 않음
 - 메모리 상에서 임시로 값을 보관하고 싶을 때 사용
 
-
+### [실전 예제](model/README.md)
