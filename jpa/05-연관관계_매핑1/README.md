@@ -183,7 +183,7 @@ member.setTeam(team2);
 ```
 ### 연관관계 제거 및 삭제
 ```java
-Member memberl = em.find(Member.class, "member1") ;
+Member member1 = em.find(Member.class, "member1") ;
 member1.setTeam(null); //연관관계 제거
 em.remove(team) // 팀 삭제
 ```
@@ -235,20 +235,118 @@ public void func() {
 
 ```
 
-[//]: # (## 연관관계 주인)
+## 연관관계 주인
+- 두 연관관계 중 외래 키를 관리하는 필드
+- 연관관계 주인만 DB와 매핑되어 외래 키를 관리(등록, 수정, 삭제)할 수 있음
+- 주인이 아니면 읽기만 가능 
+- mappedBy 속성으로 주인을 지정(주인은 사용X)
+- **연관관계의 주인은 외래 키가 있는 곳으로**  
 
-[//]: # (- 두 연관관계 중 외래 키를 관리하는 필드)
+## 양방향 연관관계 저장
+```java
+//팀1 저장
+Team team1 = new Team("team1", "팀 1");
+em.persist(team1);
 
-[//]: # (- 연관관계 주인만 DB와 매핑되어 외래 키를 관리&#40;등록, 수정, 삭제&#41;할 수 있음)
+//회원1 저장
+Member member1 = new Member("member1”, "회원1");
+member1.setTeam(team1); //연관관계 설정 member1 -> team1
+em.persist(member1);
 
-[//]: # (- 주인이 아니면 읽기만 가능 )
+// 회원2 저장
+Member member2 = new Member ("member2", "회원2");
+member2. setTeam (team1); //연관관계 설정 member2 -> team1
+em.persist(member2);
+```
+- 양방향 연관관계는 주인이 외래 키를 관리
+- 주인이 아닌 방향은 값을 설정하지 않아도 데이터베이스에 외래 키 값이 정상 입력 된다
 
-[//]: # (- mappedBy 속성으로 주인을 지정&#40;주인은 사용X&#41;)
+```java
+// 무시(연관관계의 주인이 아님)
+team1.getMembers().add(member1);
+team1.getMembers().add(member2);
+```
+- 주인이 아닌 곳에 입력된 값은 외래 키에 영향을 주지 않음(DB 저장 시 무시)
 
-[//]: # (- **연관관계의 주인은 외래 키가 있는 곳으로**  )
+## 양방향 연관관계 주의점
+### 주인이 아닌 곳에만 값 입력
+- 연관관계의 주인이 아닌 곳에만 값을 저장하는 경우 외래 키는 null로 저장된다
+```java
+// 회원1 저장
+Member member1 = new Member("member1", "회원1");
+em.persist(member1);
 
-[//]: # ()
-[//]: # (## 양방향 연관관계 저장)
+// 회원2 저장
+Member member2 = new Member("member2", "회원2");
+em.persist(member2);
 
-[//]: # ()
-[//]: # (## 양방향 연관관계 주의점)
+Team team1 = new Team("team1", "팀 1");
+
+// 주인이 아닌 곳만 연관관계 설정
+// Member 테이블에 TEAM_ID(외래 키)는 null로 저장된다
+team1.getMembers().add(member1);
+team1.getMembers().add(member2);
+em.persist(team1);
+```
+### (권장) 양쪽 모두 값 입력 
+```java
+Team team1 = new Team("team1", "팀 1");
+em.persist(team1);
+
+Member member1 = new Member("member1", "회원1");
+
+// 양방향 연관관계 설정
+member1.setTeam(team1);
+team1.getMembers().add(member1);
+em.persist(member1);
+
+Member member2 = new Member("member2", "회원2");
+
+// 양방향 연관관계 설정
+member2.setTeam(team1);
+team1.getMembers().add(member2);
+em.persist(member2);
+```
+
+### 연관관계 편의 메서드
+- 하나의 메서드로 양방향 연관관계 설정
+```java
+public class Member {
+    private Team team;
+
+    // 편의 메서드
+    public void setTeam(Team team) {
+        this.team = team;
+        team.getMembers().add(this);
+    }
+}
+
+public void testORM_양방향_리팩토링() {
+  Team team1 = new Team("team1", "팀1");
+  em.persist(team1);
+  
+  Member member1 = new Member("member 1", "회원");
+
+  // 기존 양방향 설정
+  // member1.setTeam(team1);
+  // team1.getMembers().add(member1);
+  
+  // 편의 메서드 양방향 설정
+  member1.setTeam(team1); 
+  
+  em.persist(member1);
+}
+```
+### 편의 메소드 작성 시 주의사항
+- 기존 양방향 연관관계가 있으면 기존 관계를 삭제해야 함
+```java
+public void setTeam(Team team) {
+    // 기존 관계 제거
+    if (this.team != null) {
+        this.team.getMembers().remove(this);
+    }
+    
+    this.team = team;
+    team.getMembers().add(this);
+}
+```
