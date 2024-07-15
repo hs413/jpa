@@ -119,5 +119,160 @@ public class Member {
 - 연관된 엔티티가 하나면 즉시 로딩을, 컬렉션이면 지연 로딩을 사용
 - 모든 관계에 지연 로딩 사용을 권장
 
+## 영속성 전이: CASCADE
+엔티티를 영속 상태로 만들 때 연관 엔티티도 영속 상태로 만드는 기능
 
+**부모가 여러 자식 엔티티를 가지고 있을 때**
+```java
+@Entity
+public class Parent {
+
+    @Id @GeneratedValue
+    private Long id;
+    
+    @OneToMany(mappedBy = "parent")
+    private List<Child> children = new ArrayList<Child>();
+}
+
+@Entity
+public class Child {
+
+    @Id @GeneratedValue
+    private Long id;
+    
+    @ManyToOne
+    private Parent parent;
+}
+
+private static void saveNoCascade(EntityManager em) {
+    // 부모 저장
+    Parent parent = new Parent();
+    em.persist(parent);
+    
+    // 1번 자식 저장
+    Child child1 = new Child();
+    child1.setParent(parent);          // 자식 -> 부모 연관관계 설정
+    parent.getChildren().add(child1);  // 부모 -> 자식
+    em.persist(child1);
+    
+    // 2번 자식 저장
+    Child child2 = new Child();
+    child2.setParent(parent);          // 자식 -> 부모 연관관계 설정
+    parent.getChildren().add(child2);  // 부모 -> 자식
+    em.persist(child2);
+}
+```
+- JPA에서 엔티티를 저장할 때 연관된 모든 엔티티는 영속 상태여야 한다.
+
+### 영속성 전이: 저장
+```java
+@Entity
+public class Parent {
+    // CASCADE 옵션 영속성 전이 활성화
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.PERSIST)
+    private List<Child> children = new ArrayList<Child>();
+}
+
+// 영속성 전이 저장 코드
+{
+Child child1 = new Child();
+Child child2 = new Child();
+
+Parent parent = new Parent();
+    child1.setParent(parent);         // 연관관계 추가
+    child2.setParent(parent);         // 연관관계 추가
+    parent.getChildren().add(child1);
+    parent.getChildren().add(child2);
+
+// 부모 저장, 연관된 자식들 저장
+    em.persist(parent);
+}
+```
+### 영속성 전이: 삭제
+```java
+// 영속성 전이 X
+Parent findParent = em.find(Parent.class, 1L);
+Child findChild1 = em.find(Child.class, 1L);
+Child findChild2 = em.find(Child.class, 2L);
+
+em.remove(findChild1);
+em.remove(findChild2);
+em.remove(fineParent);
+
+// 영속성 전이
+@OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE)
+private List<Child> children = new ArrayList<Child>();
+{
+    Parent findParent = em.find(Parent.class, 1L);
+	em.remove(findParent);
+}
+```
+- 부모 엔티티만 삭제하면 연관된 자식 엔티티도 함께 삭제
+- 외래 키 제약조건을 고려해서 자식을 먼저 삭제하고 부모를 삭제
+
+```java
+// 여러 속성 같이 사용 가능
+cascade = {CascadeType.PERSIST, CascadeType.REMOVE}
+```
+
+## 고아 객체
+- 고아 객체 제거: 부모 엔티티와 연관관계가 끊어진 자식 엔티티를 자동으로 삭제
+- 플러시 시점에 적용
+- 참조하는 곳이 하나일 때만 사용
+  - `@OneToOne`, `@OneToMany`만 사용 가능
+- 부모를 제거하면 자식도 같이 제거, CascadeType.REMOVE와 같음
+```java
+@Entity
+public class Parent {
+
+    @Id @GeneratedValue
+    private Long id;
+    
+    // orphanRemoval = true
+    @OneToMany(mappedBy = "parent",cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Child> childList = new ArrayList<>();
+}
+
+{
+		Child child1 = new Child();
+		Child child2 = new Child();
+		
+		Parent parent = new Parent();
+		parent.addChild(child1);
+		parent.addChild(child2);
+		
+		em.persist(parent);
+		
+		em.flush();
+		em.clear();
+		
+		Parent findParent = em.find(Parent.class, parent.getId());
+		
+		// child에서 0번째 인덱스 삭제
+		// 자식 엔티티를 컬렉션에서 제거
+		// 데이터베이스의 데이터도 삭제된다.
+		findParent.getChildList().remove(0);   
+}
+```
+### 생명주기
+
+**CasecadeType.ALL + orphanRemoval = true를 동시 사용**
+- 엔티티 스스로 생명주기를 관리
+  - 부모 엔티티를 통해서 자식의 생명주기를 관리할 수 있다
+  - 자식 엔티티는 DAO가 없어도 됨
+- 도메인 주도 설계(`DDD`)의 `Aggregate Root`개념을 구현할 때 유용
+
+**자식을 저장하려면 부모에 등록만 하면 된다. (CASCADE)**
+
+```java
+Parent parent = em.find(Parent.class, parentId);
+parent.addChild(child1);
+```
+
+**자식을 삭제하려면 부모에서 제거하면 된다(orphanRemoval)**
+
+```java
+Parent parent = em.find(Parent.class, parentId);
+parent.getChildren().remove(removeObject);
+```
 
