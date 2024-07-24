@@ -115,3 +115,113 @@ query.setParameter(1, usernameParam);
 - 단순 값을 DTO로 바로 조회
 - 패키지 명을 포함한 전체 클래스명 입력
 - 순서와 타입이 일치하는 생성자 필요
+
+### 페이징
+- `setFirstResult`(int startPosition) : 조회 시작 위치(0부터 시작)
+- `setMaxResults`(int maxResult) : 조회할 데이터 수
+
+```java
+//페이징 쿼리
+ String jpql = "select m from Member m order by m.name desc";
+ List<Member> resultList = em.createQuery(jpql, Member.class)
+ .setFirstResult(10) // 10부터
+ .setMaxResults(20)  // 20개 데이터를 가져옴
+ .getResultList();
+```
+
+### 조인
+- 조인 시 연관 필드를 사용한다 
+- ex)`FROM Member m JOIN m.team t`
+
+**내부 조인**
+```sql
+SELECT m FROM Member m [INNER] JOIN m.team t
+```
+
+**외부 조인**
+
+```sql
+SELECT m FROM Member m LEFT [OUTER] JOIN m.team t
+```
+
+**세타 조인**
+- 연관관계가 없는 엔티티를 조인할 수 있다
+```sql
+select count(m) from Member m, Team t where m.username = t.name
+```
+
+**ON 절**
+- JPA 2.1 부터 지원
+- 조인 대상 필터링
+- JPQL은 ON 절에 식별자 비교를 생략
+```sql
+-- 팀 이름이 A인 회원만 조인
+-- JPQL
+SELECT m, t FROM
+Member m LEFT JOIN m.team t on t.name = 'A'
+
+-- SQL
+SELECT m.*, t.* FROM
+  Member m LEFT JOIN Team t ON m.TEAM_ID=t.id and t.name='A'
+```
+
+### 페치 조인
+- JPQL에서 성능 최적화를 위해 제공하는 기능
+- 지연 로딩으로 설정한 엔티티를 한번에 조회하는 경우 사용
+  - 지연 로딩으로 설정한 경우 연관 객체가 한번에 조회되지 않고 프록시 객체로 초기화 됨
+  - 페치 조인 사용 시 연관 객체를 모두 조회하여 실제 엔티티로 초기화 함  
+- `JOIN FETCH` 사용
+
+**엔티티 페치 조인**
+```sql
+-- 회원을 조회하면서 연관된 팀도 함께 조회
+-- JPQL
+select m from Member m join fetch m.team;
+
+-- SQL
+SELECT 
+    M.*, T.* 
+FROM MEMBER M INNER JOIN TEAM T 
+    ON M.TEAM_ID = T.ID
+```
+- 페치 조인은 별칭을 사용할 수 없다
+
+**컬렉션 페치 조인**
+```sql
+-- JPQL
+select t
+from Team t join fetch t.members
+where t.name = '팀A'
+
+-- SQL
+SELECT 
+    T.*, M.*
+FROM TEAM T INNER JOIN MEMBER M 
+    ON T.ID=M.TEAM_ID
+WHERE T.NAME = '팀A'
+```
+- 일대다 관계이기 때문에 결과가 증가할 수 있다
+
+**DISTINCT**
+- 중복된 결과를 제거
+- SQL에 DISTINCT를 추가하고 애플리케이션에서 한 번 더 중복을 제거한다
+- 컬렉션 페치 조인과 같이 결과가 늘어나는 경우 사용
+
+**글로벌 로딩 전략**
+- 엔티티에 직접 적용한다
+- 애플리케이션 전체에 영향을 미친다
+```java
+// 글로벌 로딩 전략
+@OneToMany(fetch = FetchType.LAZY)
+```
+- 즉시 로딩으로 설정할 경우 사용하지 않는 엔티티를 자주 로딩하여 오히려 성능 저하가 생길 수 있음
+- 따라서 **글로벌 로딩 전략은 지연 로딩**을 권장
+- **최적화가 필요할 때 페치 조인을 사용**
+  - 글로벌 로딩 전략보다 페치 조인이 우선 적용됨
+
+**페치 조인 특징**
+- 별칭을 줄 수 없음
+  - select, where, sub query에 사용할 수 없음
+- 둘 이상의 컬렉션을 페치할 수 없음
+- 컬렉션 페치 조인 시 페이징 API 사용 불가
+  - 단일 값 연관 필드(일대일, 다대일)들은 가능
