@@ -371,3 +371,214 @@ public @interface NamedQuery {
 ]]>
 ```
 
+## QueryDSL
+- JPQL 쿼리 빌더
+- 문법 오류를 컴파일 단계에서 잡을 수 있다
+
+```java
+// JPQL의 별칭을 m으로 함
+QMember qMember = new QMember("m");
+
+List<Member> members = query.from(qMember)
+        .where (qMember .name.eq("회원1"))
+        .orderBy(qMember.name.desc())
+        .list(qMember);
+
+// 생성된 쿼리
+select m from Member m
+where m.name = ?1
+order by m.name desc
+```
+### 검색 조건
+```java
+List<Item> list = query.from(item)
+    .where(item.name.eq("상품").and(item.price.gt(20000)))
+    .list(item); // 프로젝션 지정
+
+// and 연산
+.where(item.name.eq("상품"), item.price.gt(20000));
+```
+
+### 결과 조회
+- uniqueResult()
+  - 조회 결과가 하나일 때 사용
+  - 결과가 없으면 null 반환
+  - 하나 이상이면 예외 발생
+- singleResult()
+  - uniqueResult와 같음
+  - 결과가 하나 이상이면 첫 데이터 반환
+- list()
+  - 결과가 하나 이상일 때 사용
+  - 없으면 빈 컬렉션 반환
+
+### 페이징, 정렬
+```java
+query.from(item)
+    // 정렬
+    .orderBy(item.price.desc()), item.quantity.asc())
+    // 페이징
+    .offset(10).limit(20)
+    .list(item);
+
+// 페이징, restrict() + QueryModifiers(limit, offset)
+QueryModifiers queryModifiers = new QueryModifiers(20L, 10L);
+query.from(item)
+    .restrict(queryModifiers)
+    .list(item);
+
+// 전체 데이터 수, listResults()
+SearchResults<Item> result = query.from(item)
+        .where(item.price.gt(10000))
+        .offset(10).limit(20)
+        .listResult(item);
+
+// 검색된 전체 데이터 수
+long total = result.getTotal();
+// 조회된 데이터
+List<Item> result = result.getResults();
+```
+### 그룹
+```java
+query.from(item)
+    .groupBy(item.price)
+    .having(item.price.gt(1000))
+    .list(item);
+```
+
+### 조인
+`join(조인 대상, 별칭으로 사용할 쿼리 타입)`
+
+```java
+QOrder order = QOrder.order;
+QMember member = QMember.member;
+QOrderItem orderItem = QOrderltem.orderItem;
+
+// 기본 조인
+query.from(order)
+    .join(order.member, member)
+    .leftjoin(order.orderIterns, orderitem)
+    .list(order);
+
+// on 사용
+query.from(order)
+    .leftjoin(order.orderIterns, orderitem)
+    .on(orderItem.count.gt(2))
+    .list(order);
+
+// fetch 조인
+query.from(order)
+    .innerJoin(order.member, member).fetch()
+    .leftjoin(order.orderIterns, orderitem).fetch()
+    .list(order);
+
+// 세타 조인
+uery. from(order, member)
+    .where(order.member.eq(member))
+    .list(order);
+```
+
+### 서브 쿼리
+```java
+QItem item = QItem.item;
+QItem itemSub = new QItem("itemSub");
+
+// 한 건
+query.from(item)
+    .where(item.price.eq(
+        new JPASubQuery().from(itemSub)
+            .unique(itemSub.price.max())
+    ))
+    .list(item);
+
+// 여러 건
+query.from(item)
+    .where(item.in(
+        new JPASubQuery().from(itemSub)
+            .where(item.name.eq(itemSub.name))
+            .list(itemSub)
+    ))
+    .list(item);
+```
+### 프로젝션
+**튜플**
+- 프로젝션 대상이 여러 필드인 경우 Tuple 타입을 사용
+```java
+QItem item = QItem.item;
+List<Tuple> result = query.from(item).list(item.name, item.price);
+
+// 사용
+// tuple.get(item.name);
+// tuple.get(item.price);
+```
+
+**빈 생성**
+```java
+QItem item = QItem.item;
+
+// setter
+List<ItemDTO> result = query.from(item).list(
+        Projections.bean(ItemDTO.class, item.name.as("username"), item.price));
+
+// 필드 직접 접근(private 필드도 가능)
+List<ItemDTO> result = query.from(item).list(
+        Projections.fields(ItemDTO.class, item.name.as("username"), item.price));
+
+// 생성자 사용
+List<ItemDTO> result = query.from(item).list(
+        Projections.constructor(ItemDTO.class, item.name, item.price));
+
+```
+**DISTINCT**
+```java
+query.distinct().from(item)
+```
+### 수정, 삭제
+```java
+QItem item = QItem.item;
+// 수정
+JPAUpdateClause updateClause = new JPAUpdateClause(em, item);
+long count = updateClause.where(item, name.eq("JPA"))
+        .set(item.price, item.price.add(100))
+        .execute();
+    
+// 삭제
+JPADeleteClause deleteClause = new JPADeleteClause(em, item);
+long count = deleteClause.where(item, name.eq("JPA"))
+        .execute();
+
+```
+
+### 동적 쿼리 
+- BooleanBuilder 사용
+```java
+QItem item = QItem.item;
+String text = "텍스트";
+Integer price = 10000;
+BooleanBuilder builder = new BooleanBuilder();
+
+if (StringUtils.hasText(text)) {
+    builder.and(item.name.contains(text));
+}
+if (param.getPrice() != null) {
+    builder.and(item.price.gt(price));
+}
+
+List<Item> result = query.from(item)
+    .where(builder)
+    .list(item);
+```
+
+### 메서드 위임
+```java
+// 검색 조건 정의
+public class ItemExpression {
+    @QueryDelegate(Item.class)
+    public static BooleanExpression isExpensive(QItem item,
+                                                Integer price) {
+        return item.price.gt(price);
+    }
+}
+
+// 사용
+query.from(item).where(item.isExpensive(30000)).list(item);
+```
