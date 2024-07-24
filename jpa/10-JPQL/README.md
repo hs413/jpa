@@ -582,3 +582,32 @@ public class ItemExpression {
 // 사용
 query.from(item).where(item.isExpensive(30000)).list(item);
 ```
+
+### 네이티브 SQL
+**엔티티 조회**
+```java
+// createNativeQuery(sql, 결과 클래스)
+Query nativeQuery = em.createNativeQuery(sql, Member.class);
+List<Member> resultList = nativeQuery.getResultList();
+```
+**값 조회**
+```java
+// createNativeQuery(sql)
+Query nativeQuery = em.createNativeQuery(sql);
+List<Object[]> resultList = nativeQuery.getResultList();
+```
+**결과 매핑**
+```java
+// createNativeQuery(String sql, String resultSetMapping);
+Query nativeQuery = em. createNativeQuery (sql, "memberWithOrderCount");
+List<Object[]> resultList = nativeQuery.getResultList();
+
+// 매핑 정의
+@Entity
+@SqlResultSetMapping(name = "memberWithOrderCount",
+        entities = { @EntityResult(entityClass = Member.class) },
+        columns = { @ColumnResult(name = "ORDER_COUNT") }
+)
+public class Member{}
+
+```
