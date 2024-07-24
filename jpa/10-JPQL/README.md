@@ -225,3 +225,149 @@ WHERE T.NAME = '팀A'
 - 둘 이상의 컬렉션을 페치할 수 없음
 - 컬렉션 페치 조인 시 페이징 API 사용 불가
   - 단일 값 연관 필드(일대일, 다대일)들은 가능
+
+### 서브 쿼리
+- where, having 절에만 사용 가능
+
+```sql
+-- 나이가 평균보다 많은 회원
+select m from Member m
+where m.age > (select avg(m2.age) from Member m2)
+
+-- 한 건이라도 주문한 고객
+select m from Member m
+where (select count(o) from Order o where m = o.member) > 0
+```
+**서브 쿼리 지원 함수**
+- `[NOT] EXISTS (subquery)` : 서브쿼리에 결과가 존재하면 참
+  - `{ALL | ANY | SOME} (subquery)`
+  - `ALL` : 모두 만족하면 참
+  - `ANY`, `SOME` : 조건을 하나라도 만족하면 참
+- `[NOT] IN (subquery)` : 서브쿼리의 결과 중 하나라도 같은 것이 있으면 참
+
+### 다형성 쿼리
+ **Type**
+- 조회 대상을 특정 자식으로 한정
+```sql
+-- Item 중에 Book, Movie를 조회
+-- JPQL
+select i from Item i
+where type(i) IN (Book, Movie)
+
+-- SQL
+select i from i
+where i.DTYPE in ('B', 'M')
+```
+
+**TREAT (JPA 2.1)**
+- 자바의 타입 캐스팅과 유사
+- 상속 구조에서 부모 타입을 특정 자식 타입으로 다룰 때 사용
+- FROM, WHERE, SELECT(하이버네이트 지원) 사용
+
+```sql
+-- 부모인 Item과 자식 Book
+-- JPQL
+select i from Item i
+where treat(i as Book).auther = 'kim'
+
+-- SQL
+select i.* from Item i
+where i.DTYPE = 'B' and i.auther = 'kim'
+```
+
+### 엔티티 직접 사용
+**기본 키**
+- JPQL에서 엔티티 객체 사용 = 해당 엔티티의 기본 키 사용
+
+```sql
+-- 엔티티의 아이디 사용
+select count(m.id) from Member m;
+
+-- 엔티티 직접 사용
+select count(m) from Member m;
+
+-- 실행 결과는 같음, JPQL의 count(m)이 SQL에서 count(m.id)로 변환 됨
+select count(m.id) as cnt from Member m
+```
+
+```sql
+-- where절에 엔티티 사용
+select m from Member m where m = :member
+                     
+-- 실행된 SQL 
+select m.* from Member m
+where m.id=?
+```
+
+**외래 키**
+
+```sql
+-- JPQL
+select m from Member m where m.team = :team;
+           
+-- SQL
+select m.* from Member m
+where m.team_id=?
+```
+
+### Named 쿼리: 정적 쿼리
+- 미리 이름을 정의해서 사용하는 JPQL
+- **애플리케이션 로딩 시점에 문법을 체크하고 파싱함**
+  - 파싱된 결과를 재사용하므로 성능상 이점
+  - 빠른 오류 확인 가능
+
+**어노테이션에 정의**
+```java
+@Entity
+// @NamedQuery.name: 쿼리 이름
+// @NamedQuery.query: 사용할 쿼리
+@NamedQuery(
+    name = "Member.findByUsername",
+    query="select m from Member m where m.username = :username")
+public class Member {}
+
+// 사용
+List<Member> resultList =
+    em.createNamedQuery("Member.findByUsername", Member.class)
+        .setParameter("username", "회원1")
+        .getResultList();
+```
+**@NamedQueries**
+- 2개 이상의 Named 쿼리를 정의
+```java
+@Entity
+@NamedQueries({
+    @NamedQuery(
+        name = "Member.findByUsername",
+        query = "select m from Member m where m.username = :username"),
+    @NamedQuery(
+        name = "Member.count",
+        query = "select count(m) from Member m")
+})
+```
+**`@NamedQuery` 어노테이션 상세**
+```java
+@Target({TYPE})
+public @interface NamedQuery {
+    String name();     // Named 쿼리 이름 (필수)
+    String query();    // JPQL 정의 (필수)
+    LockModeType lockMode() default NONE;
+    QueryHint[] hints() default {};
+```
+- `lockMode` : 쿼리 실행 시 락을 건다
+- `hints` : JPA 구현체에게 제공하는 힌트, 2차 캐시를 다룰 때 사용
+- **어노테이션에 정의할 경우 오류를 금방 발견할 수 있음**
+
+**XML에 정의**
+- 멀티 라인을 쉽게 작성할 수 있음
+- XML이 애너테이션 보다 우선
+- 애플리케이션 운영 환경에 따라 다른 XML을 배포할 수 있다
+
+```xml
+<![CDATA[
+    select m 
+    from Member m 
+    where m.username = :username
+]]>
+```
+
