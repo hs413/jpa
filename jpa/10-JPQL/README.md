@@ -611,3 +611,61 @@ List<Object[]> resultList = nativeQuery.getResultList();
 public class Member{}
 
 ```
+
+## 쿼리 심화
+
+### 벌크 연산
+```java
+// update
+String query =
+        "update Product p " +
+        "set p.price = p.price * 1.1 " +
+        "where p.stockAmount < :stockAmount";
+
+int resultCount = em.createQuery(query)
+        .setParameter("stockAmount", 10)
+        .executeUpdate();
+
+// delete 
+
+String query =
+        "delete from Product p " +
+            "where p.price < :price";
+
+int resultCount = em.createQuery(query)
+        .setParameter("price", 100)
+        .executeUpdate();
+```
+- 벌크 연산은 영속성 컨텍스트와 2차 캐시를 무시하고 데이터베이스에 직접 실행된다
+  - 벌크 연산은 가장 먼저 실행하거나 
+  - 실행 후 영속성 컨텍스트를 초기화
+  - 또는 `em.refresh` 사용
+
+### 영속성 컨텍스트
+- JPQL은 항상 DB를 조회
+- JPQL로 조회한 엔티티는 영속 상태
+- 영속성 컨텍스트에 엔티티가 있으면 기존 엔티티를 반환
+
+### 플러시 모드
+- 플러시 = 영속성 컨텍스트의 변경 내역을 DB와 동기화 하는 것
+- JPA는 트랜잭션 커밋 직전, 쿼리 실쟁 직전 자동으로 플러시를 호출
+- FlushModeType.AUTO: 커밋, 쿼리 실행 시 플러시 (기본값)
+- FlushModeType.COMMIT: 커밋 시에만 플러시
+
+```java
+// 커밋 시에만 플러시
+em.setFlushMode(FlushModeType.COMMIT);
+
+product.setPrice(2000);
+// 1. em.flush() 직접 호출
+
+Product product2 =
+em.createQuery("select p from Product p where p.price = 2000", Product.class)
+    // 2. setFlushMode() 설정 
+    // 해당 쿼리에서만 플러시 모드 설정 (우선)
+    .setFlushMode(FlushModeType.AUTO) 
+    .getSingleResult();
+```
+- 비즈니스 로직에 쿼리가 여러 번 사용되는 경우 commit 모드로 플러시 횟수를 줄여 성능을 최적화 할 수 있다
+- JDBC를 사용하는 경우 JPA가 JDBC 쿼리를 인식하지 못하므로 em.flush()를 명시적으로 호출해야 함
+  - 플러시 모드가 auto여도 플러시가 작동하지 않음
