@@ -13,16 +13,20 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import static jpa.querydsl.entity.QMember.*;
 
 @SpringBootTest
 @Transactional
 class QuerydslTest {
     @PersistenceContext
     EntityManager em;
+
     JPAQueryFactory queryFactory;
 
     @BeforeEach
     public void before() {
+        queryFactory = new JPAQueryFactory(em);
+
         Team teamA = new Team("Team A");
         Team teamB = new Team("Team B");
         em.persist(teamA);
@@ -63,6 +67,31 @@ class QuerydslTest {
                 .where(m.username.eq("member1"))
                 .fetchOne();
 
+        assertThat(findMember.getUsername()).isEqualTo("member1");
+    }
+
+    // JPAQueryFactory 필드 사용
+    @Test
+    public void querydsl2() {
+        QMember m = new QMember("m");
+
+        Member findMember = queryFactory
+                .select(m)
+                .from(m)
+                .where(m.username.eq("member1"))
+                .fetchOne();
+
+        assertThat(findMember.getUsername()).isEqualTo("member1");
+    }
+
+    // Q-Type 기본 인스턴스 사용
+    @Test
+    public void querydsl3() {
+        Member findMember = queryFactory
+                .select(member)
+                .from(member)
+                .where(member.username.eq("member1"))
+                .fetchOne();
         assertThat(findMember.getUsername()).isEqualTo("member1");
     }
 }
