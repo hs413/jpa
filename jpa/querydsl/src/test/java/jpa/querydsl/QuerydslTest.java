@@ -11,6 +11,7 @@ import jakarta.transaction.Transactional;
 import java.util.List;
 import jpa.querydsl.entity.Member;
 import jpa.querydsl.entity.QMember;
+import jpa.querydsl.entity.QTeam;
 import jpa.querydsl.entity.Team;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -202,7 +203,7 @@ class QuerydslTest {
                 .from(member)
                 .join(member.team, team)
                 .groupBy(team.name)
-//                .having(member.age.gt(20))
+//                .having(member.age.avg().gt(20))
                 .fetch();
 
         Tuple teamA = result.get(0);
@@ -215,4 +216,36 @@ class QuerydslTest {
         assertThat(teamB.get(member.age.avg())).isEqualTo(35);
     }
 
+    // join - 기본
+    @Test
+    public void join() throws Exception {
+        QMember member = QMember.member;
+        QTeam team = QTeam.team;
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .join(member.team, team)
+                .where(team.name.eq("teamA"))
+                .fetch();
+
+        assertThat(result)
+                .extracting("username")
+                .containsExactly("member1", "member2");
+    }
+
+    // join - 세타 조인
+    @Test
+    public void thetaJoin() throws Exception {
+        em.persist(new Member("teamA"));
+        em.persist(new Member("teamB"));
+
+        List<Member> result = queryFactory
+                .select(member)
+                .from(member, team)
+                .where(member.username.eq(team.name))
+                .fetch();
+
+        assertThat(result)
+                .extracting("username")
+                .containsExactly("teamA", "teamB");
+    }
 }

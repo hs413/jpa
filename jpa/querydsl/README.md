@@ -126,29 +126,43 @@ long count = queryFactory
 - desc(), asc(): 일반 정렬
 - nullsLast(), nullsFirst(): null 데이터 순서 부여
 ```java
-/**
- * 회원 정렬 순서
- * 1. 회원 나이 내림차순(desc)
- * 2. 회원 이름 올림차순(asc)
- * 2에서 회원 이름이 없으면 마지막에 출력(nulls last)
- */
-@Test
-public void sort() {
-    em.persist(new Member(null, 100));
-    em.persist(new Member("member5", 100));
-    em.persist(new Member("member6", 100));
-    
-    List<Member> result = queryFactory
-            .selectFrom(member)
-            .where(member.age.eq(100))
-            .orderBy(member.age.desc(), member.username.asc().nullsLast())
-            .fetch();
-            
-    Member member5 = result.get(0);
-    Member member6 = result.get(1);
-    Member memberNull = result.get(2);
-    assertThat(member5.getUsername()).isEqualTo("member5");
-    assertThat(member6.getUsername()).isEqualTo("member6");
-    assertThat(memberNull.getUsername()).isNull();
-}
+List<Member> result = queryFactory
+        .selectFrom(member)
+        .where(member.age.eq(100))
+        .orderBy(member.age.desc(), member.username.asc().nullsLast())
+        .fetch();
 ```
+- 나이 내림차순
+- 이름 오름차순
+- 이름이 없으면(null) 마지막에 출력
+### 조인
+**기본**
+```text
+join(조인 대상, 별칭으로 사용할 Q타입)
+```
+
+```java
+QMember member = QMember.member;
+QTeam team = QTeam.team;
+List<Member> result = queryFactory
+        .selectFrom(member)
+        .join(member.team, team)
+        .where(team.name.eq("teamA"))
+        .fetch();
+```
+- join(), innerJoin(): 내부 조인
+- leftJoin(): left 외부 조인
+- rightJoin(): right 외부 조인
+- JPQL의 on과 성능 최적화를 위한 fetch 조인 제공
+
+**세타 조인**
+- 연관관계가 없는 필드 조인
+- 외부 조인 불가능 -> on을 사용하여 외부 조인
+```java
+List<Member> result = queryFactory
+        .select(member)
+        .from(member, team)
+        .where(member.username.eq(team.name))
+        .fetch();
+```
+- 회원 이름과 팀 이름이 같은 회원 조회
