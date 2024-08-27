@@ -33,3 +33,58 @@ public void startQuerydsl3() {
     assertThat(findMember.getUsername()).isEqualTo("member1");
 }
 ```
+
+### 검색
+**기본**
+```java
+@Test
+public void search() {
+    Member findMember = queryFactory
+        .selectFrom(member)
+        .where(member.username.eq("member1")
+        .and(member.age.eq(10)))
+        .fetchOne();
+    
+    assertThat(findMember.getUsername()).isEqualTo("member1");
+}
+```
+- .and(), .or()를 메서드 체인으로 연결할 수 있다
+
+**검색 조건**
+```java
+.eq("member1") //  = 'member1'
+.ne("member1") // != 'member1'
+.eq("member1").not() //  != 'member1'
+
+.isNotNull() // is not null
+
+.in(10, 20) //  in (10,20)
+.notIn(10, 20) //  not in (10, 20)
+.between(10,30) // between 10, 30
+
+.goe(30) //  >= 30
+.gt(30) //  > 30
+.loe(30) //  <= 30
+.lt(30) //  < 30
+
+.like("member%") // like 검색
+.contains("member") // like ‘%member%’ 검색
+.startsWith("member") //like ‘member%’ 검색
+```
+**AND 조건 파라미터**
+```java
+@Test
+public void searchAndParam() {
+    List<Member> result1 = queryFactory
+        .selectFrom(member)
+        .where(
+                member.username.eq("member1"),
+                member.age.eq(10))
+        .fetch();
+    
+    assertThat(result1.size()).isEqualTo(1);
+}
+```
+- where()에 파라미터로 검색 조건을 추가하면 AND 조건이 추가됨
+- null 값은 무시
+
