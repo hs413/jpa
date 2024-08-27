@@ -13,6 +13,7 @@ import jpa.querydsl.entity.Member;
 import jpa.querydsl.entity.QMember;
 import jpa.querydsl.entity.QTeam;
 import jpa.querydsl.entity.Team;
+import lombok.extern.log4j.Log4j2;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import static jpa.querydsl.entity.QMember.*;
 import static jpa.querydsl.entity.QTeam.*;
 
+@Log4j2
 @SpringBootTest
 @Transactional
 class QuerydslTest {
@@ -247,5 +249,36 @@ class QuerydslTest {
         assertThat(result)
                 .extracting("username")
                 .containsExactly("teamA", "teamB");
+    }
+
+    @Test
+    public void joinOnFiltering() throws Exception {
+        List<Tuple> result = queryFactory
+                .select(member, team)
+                .from(member)
+                .leftJoin(member.team, team).on(team.name.eq("TeamA"))
+                .fetch();
+
+        for(Tuple tuple : result) {
+            log.info("tuple: {}", tuple);
+        }
+    }
+
+    @Test
+    public void joinOnNoRelation() throws Exception {
+        //given
+        em.persist(new Member("teamA"));
+        em.persist(new Member("teamB"));
+        em.persist(new Member("teamC"));
+
+        List<Tuple> result = queryFactory
+                .select(member, team)
+                .from(member)
+                .leftJoin(team).on(member.username.eq(team.name))
+                .fetch();
+
+        for (Tuple tuple : result) {
+            log.info("tuple: {}", tuple);
+        }
     }
 }
