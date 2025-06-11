@@ -73,7 +73,8 @@ public class OrderRepository {
         return query.getResultList();
     }
 
-    public List<Order> findAllByCriteria(OrderSearch orderSearch) {
+//    public List<Order> findAllByCriteria(OrderSearch orderSearch) {
+    public List<Order> findAll(OrderSearch orderSearch) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Order> cq = cb.createQuery(Order.class);
         Root<Order> o = cq.from(Order.class);
@@ -96,4 +97,33 @@ public class OrderRepository {
 
         return query.getResultList();
     }
+
+    /*public List<Order> findAll(OrderSearch orderSearch) {
+
+        QOrder order = Qorder.order;
+        QMember member = QMember.member;
+
+        return query
+            .select(order)
+            .from(order)
+            .join(order.member, member)
+            .where(statusEq(orderSearch.getOrderStatus()),
+                nameLike(orderSearch.getMemberName()))
+            .limit(1000)
+            .fetch();
+    }
+
+    private BooleanExpression statusEq(OrderStatus statusCond) {
+        if (statusCond == null) {
+            return null;
+        }
+        return order.status.eq(statusCond;)
+    }
+
+    private BooleanExpression nameLike(String nameCond) {
+        if (!StringUtils.hasText(nameCond)) {
+            return null;
+        }
+        return member.name.like(nameCond);
+    }*/
 }
