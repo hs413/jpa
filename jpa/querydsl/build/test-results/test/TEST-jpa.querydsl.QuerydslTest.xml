@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="jpa.querydsl.QuerydslTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2024-08-27T03:00:53" hostname="hyupsangui-MacBookPro.local" time="0.581">
+  <properties/>
+  <testcase name="booleanBuilder()" classname="jpa.querydsl.QuerydslTest" time="0.581"/>
+  <system-out><![CDATA[12:00:51.682 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [jpa.querydsl.QuerydslTest]: QuerydslTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+12:00:51.732 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration jpa.querydsl.QuerydslApplication for test class jpa.querydsl.QuerydslTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.3)
+
+2024-08-27T12:00:51.949+09:00  INFO 2985 --- [myapp] [    Test worker] jpa.querydsl.QuerydslTest                : Starting QuerydslTest using Java 17.0.11 with PID 2985 (started by hyupsang in /Users/hyupsang/sh/sources/github/jpa/jpa/querydsl)
+2024-08-27T12:00:51.950+09:00  INFO 2985 --- [myapp] [    Test worker] jpa.querydsl.QuerydslTest                : No active profile set, falling back to 1 default profile: "default"
+2024-08-27T12:00:52.166+09:00  INFO 2985 --- [myapp] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2024-08-27T12:00:52.173+09:00  INFO 2985 --- [myapp] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 3 ms. Found 0 JPA repository interfaces.
+2024-08-27T12:00:52.468+09:00  INFO 2985 --- [myapp] [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2024-08-27T12:00:52.493+09:00  INFO 2985 --- [myapp] [    Test worker] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.2.Final
+2024-08-27T12:00:52.513+09:00  INFO 2985 --- [myapp] [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2024-08-27T12:00:52.664+09:00  INFO 2985 --- [myapp] [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2024-08-27T12:00:52.678+09:00  INFO 2985 --- [myapp] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2024-08-27T12:00:52.868+09:00  INFO 2985 --- [myapp] [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@5f3ddc86
+2024-08-27T12:00:52.869+09:00  INFO 2985 --- [myapp] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2024-08-27T12:00:52.897+09:00  WARN 2985 --- [myapp] [    Test worker] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2024-08-27T12:00:53.339+09:00  INFO 2985 --- [myapp] [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2024-08-27T12:00:53.391+09:00  INFO 2985 --- [myapp] [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2024-08-27T12:00:53.484+09:00  WARN 2985 --- [myapp] [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2024-08-27T12:00:53.686+09:00  INFO 2985 --- [myapp] [    Test worker] jpa.querydsl.QuerydslTest                : Started QuerydslTest in 1.864 seconds (process running for 2.455)
+Hibernate: 
+    select
+        next_val as id_val 
+    from
+        team_seq for update
+Hibernate: 
+    update
+        team_seq 
+    set
+        next_val= ? 
+    where
+        next_val=?
+Hibernate: 
+    select
+        next_val as id_val 
+    from
+        member_seq for update
+Hibernate: 
+    update
+        member_seq 
+    set
+        next_val= ? 
+    where
+        next_val=?
+Hibernate: 
+    insert 
+    into
+        team
+        (name, team_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        team
+        (name, team_id) 
+    values
+        (?, ?)
+Hibernate: 
+    insert 
+    into
+        member
+        (age, team_id, username, member_id) 
+    values
+        (?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        member
+        (age, team_id, username, member_id) 
+    values
+        (?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        member
+        (age, team_id, username, member_id) 
+    values
+        (?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        member
+        (age, team_id, username, member_id) 
+    values
+        (?, ?, ?, ?)
+Hibernate: 
+    select
+        m1_0.member_id,
+        m1_0.age,
+        m1_0.team_id,
+        m1_0.username 
+    from
+        member m1_0 
+    where
+        m1_0.username=? 
+        and m1_0.age=?
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
