@@ -5,6 +5,7 @@ import jpa.datajpa.entity.Member;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -71,7 +72,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
             countQuery = "select count(m) from Member m")
     Page<Member> findByAge(int age, Pageable pageable);
 
-
     /**
      * 벌크성 수정
      * - 벌크 연산은 영속성 컨텍스트를 무시하고 db에 바로 반영
@@ -83,4 +83,27 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Modifying(clearAutomatically = true)
     @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
     int bulkAgePlus(@Param("age") int age);
+
+    /**
+     * JPQL을 사용한 페치 조인
+     * */
+    @Query("select m from Member m left join fetch m.team")
+    List<Member> findMemberFetchJoin();
+
+    /**
+     * EntityGraph를 사용한 페치 조인
+     * */
+    // 공통 메서드 오버라이드
+    @Override
+    @EntityGraph(attributePaths = {"team"})
+    List<Member> findAll();
+
+    // JPQL + 엔티티 그래프
+    @EntityGraph(attributePaths = {"team"})
+    @Query("select m from Member m")
+    List<Member> findMemberEntityGraph();
+
+    // 메서드 이름으로 쿼리 생성 방식을 사용 -> 간단한 쿼리에서 사용
+    @EntityGraph(attributePaths = {"team"})
+    List<Member> findEntityGraphByUsername(@Param("username") String username);
 }
