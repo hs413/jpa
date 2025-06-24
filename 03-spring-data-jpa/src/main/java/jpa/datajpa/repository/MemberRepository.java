@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * 스프링 데이터 JPA 사용
  * */
-public interface MemberRepository extends JpaRepository<Member, Long> {
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom {
     /**
     * 쿼리 메서드 기능
     * - 메서드 이름을 분석해서 JPQL을 생성하고 실행
