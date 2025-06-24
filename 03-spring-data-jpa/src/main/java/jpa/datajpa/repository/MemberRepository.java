@@ -112,4 +112,6 @@ public interface MemberRepository extends JpaRepository<Member, Long>, MemberRep
     // 변경 감지를 체크하지 않음
     @QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true"))
     Member findReadOnlyByUsername(String username);
+
+    List<UsernameOnly> findProjectionsByUsername(@Param("username") String username);
 }
