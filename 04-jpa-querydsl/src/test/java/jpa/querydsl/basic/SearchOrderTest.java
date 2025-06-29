@@ -1,6 +1,7 @@
 package jpa.querydsl.basic;
 
 import jpa.querydsl.entity.Member;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -8,25 +9,26 @@ import java.util.List;
 import static jpa.querydsl.entity.QMember.member;
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * 검색 및 정렬 테스트
+ *  member.username.eq("member1") // username = 'member1'
+ *  member.username.ne("member1") //username != 'member1'
+ *  member.username.eq("member1").not() // username != 'member1'
+ * 	member.username.isNotNull() //이름이 is not null
+ *  member.age.in(10, 20) // age in (10,20)
+ *  member.age.notIn(10, 20) // age not in (10, 20)
+ *  member.age.between(10,30) //between 10, 30
+ *  member.age.goe(30) // age >= 30
+ *  member.age.gt(30) // age > 30
+ *  member.age.loe(30) // age <= 30
+ *  member.age.lt(30) // age < 30
+ * 	member.username.like("member%") //like 검색
+ * 	member.username.contains("member") // like ‘%member%’
+ * 	member.username.startsWith("member") //like ‘member%’
+ * */
 public class SearchOrderTest extends BasicTestInit{
-    /**
-     * 기본 검색
-     *  member.username.eq("member1") // username = 'member1'
-     *  member.username.ne("member1") //username != 'member1'
-     *  member.username.eq("member1").not() // username != 'member1'
-     * 	member.username.isNotNull() //이름이 is not null
-     *  member.age.in(10, 20) // age in (10,20)
-     *  member.age.notIn(10, 20) // age not in (10, 20)
-     *  member.age.between(10,30) //between 10, 30
-     *  member.age.goe(30) // age >= 30
-     *  member.age.gt(30) // age > 30
-     *  member.age.loe(30) // age <= 30
-     *  member.age.lt(30) // age < 30
-     * 	member.username.like("member%") //like 검색
-     * 	member.username.contains("member") // like ‘%member%’
-     * 	member.username.startsWith("member") //like ‘member%’
-     * */
     @Test
+    @DisplayName("기본 검색")
     public void search() {
         Member findMember = queryFactory
                 // select, from -> selectFrom으로 합칠 수 있다.
