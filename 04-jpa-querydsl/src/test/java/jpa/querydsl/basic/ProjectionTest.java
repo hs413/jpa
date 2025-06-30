@@ -13,8 +13,6 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static jpa.querydsl.entity.QMember.member;
-import static jpa.querydsl.entity.QTeam.team;
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Projection 테스트
