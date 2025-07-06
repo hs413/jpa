@@ -2,7 +2,7 @@
 
 ### [JPA 소개](01-JPA_소개/README.md)
 
-[//]: # (### [2. JPA 시작]&#40;02-JPA_소개/README.md&#41;)
+### [JPA 시작](02-JPA_시작/README.md)
 
 [//]: # (- ### [영속성 관리]&#40;01-JPA_소개/README.md&#41;)
 
