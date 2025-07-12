@@ -131,14 +131,121 @@ public class Team {
   - 연관된 엔티티의 타입 정보 설정
   - 거의 사용하지 않음
 
-[//]: # ()
-[//]: # (## 연관관계 사용)
+## 연관관계 사용
+### 저장
+- 엔티티를 저장할 때 연관된 모든 엔티티는 영속 상태여야 한다
+```java
+public void testSave() {
+//팀1 저장
+Team team1 = new Team("team1", "팀 1");
+em.persist(team1);
 
-[//]: # ()
-[//]: # (## 양방향 연관관계)
+//회원1 저장
+Member member1 = new Member("member1", "회원1");
+//연관관계 설정 member1 -> team1
+member1.setTeam(team1); 
+em.persist(member1);
 
-[//]: # ()
+//회원2 저장
+Member member2 = new Member("member2", "회원2");
+//연관관계 설정 member2 -> team1
+member2.setTeam(team1); 
+em.persist(member2);
+
+```
+
+### 조회
+**객체 그래프 탐색**
+```java
+Member member = em.find(Member.class, "member1");
+// 객체 그래프 탐색
+Team team = member.getTeam() ; 
+```
+**JPQL** 
+- ':'로 시작하는 변수명 - 파라미터를 바인딩하는 문법
+```java
+// :teamName = 파라미터 바인딩
+String jpql = "select m from Member m join m.team t where " +
+          "t.name=:teamName";
+```
+
+### 수정
+- update 메서드는 없음
+- 트랜잭션을 커밋할 때 플러시에의해 변경 감지 기능으로 값을 업데이트
+```java
+//새로운 팀2
+Team team2 = new Team("teaㅡ2", "팀2");
+em.persist(team2);
+//회원1에 새로운 팀2 설정
+
+Member member = em.find(Member.class, "member1") ;
+member.setTeam(team2);
+```
+### 연관관계 제거 및 삭제
+```java
+Member memberl = em.find(Member.class, "member1") ;
+member1.setTeam(null); //연관관계 제거
+em.remove(team) // 팀 삭제
+```
+## 양방향 연관관계
+![단방향](images/img_2.png)
+- 회원과 팀은 다대일 관계
+- 팀과 회원은 일대다 관계
+- 일대다는 여러 건의 연관관계를 맺을 수 있으므로 컬렉션 사용
+  - 회원 -> 팀(Member.team)
+  - 팀 -> 회원(Team.members) Team.members를 List로
+```java
+@Entity
+public class Member {
+  @Id
+  @Column (name = "NEMBER_ID")
+  private String id;
+  private String username;
+  
+  @ManyToOne
+  @JoinColumn(name="TEAM_ID")
+  private Team team;
+  //연관관계 설정
+  public void setTeam(Team team) {
+      this.team = team;
+  }
+}
+
+@Entity
+public class Team {
+  @Id
+  @Column(name = "TEAM_ID")
+  private String id;
+  private String name;
+  
+  @OneToMany (mappedBy = "team")
+  private List<bfember> members = new ArrayList<Member>();
+}
+
+public void func() {
+    Team team = em.find(Team.class, "team1");
+    List<Member> members = team.getMembers(); //(팀 -> 회원)
+  
+    //객체 그래프 탐색
+    for (Member member : members) {
+        System.out.printin("member.username = " +
+            member.getUsername());
+    }    
+}
+
+```
+
 [//]: # (## 연관관계 주인)
+
+[//]: # (- 두 연관관계 중 외래 키를 관리하는 필드)
+
+[//]: # (- 연관관계 주인만 DB와 매핑되어 외래 키를 관리&#40;등록, 수정, 삭제&#41;할 수 있음)
+
+[//]: # (- 주인이 아니면 읽기만 가능 )
+
+[//]: # (- mappedBy 속성으로 주인을 지정&#40;주인은 사용X&#41;)
+
+[//]: # (- **연관관계의 주인은 외래 키가 있는 곳으로**  )
 
 [//]: # ()
 [//]: # (## 양방향 연관관계 저장)
