@@ -93,7 +93,7 @@ List<Member> findByNames(@Param("names") Collection<String> names);
 
 **벌크성 수정 쿼리**
 ```java
-@Modifying
+@Modifying(clearAutomatically = true)
 @Query("update Product p set p.price = p.price * 1.1 where p.stockAmount < :stockAmount")
 int bulkPriceUpdate(@Param("stockAmount") String stockAmount);
 ```
@@ -108,3 +108,115 @@ List<Member> findByUsername(String name); //컬렉션
 Member findByUsername(String name); //단건
 Optional<Member> findByUsername(String name); //단건 Optional
 ```
+
+**페이징과 정렬**
+- 페이징 정렬 파라미터
+  - Sort: 정렬 기능
+  - Pageable: 페이징 기능 (내부에 Sort 포함)
+- 반환 타입
+  - Page: 추가 count 쿼리 결과를 포함하는 페이징
+  - Slice: 추가 count 쿼리 없이 다음 페이지만 확인 가능
+    - 내부적으로 limit + 1 조회
+  - List(자바 컬렉션): 추가 count 쿼리 없이 결과만 반환
+
+```java
+// 페이징 메서드 정의 예시
+Page<Member> findByUsername(String name, Pageable pageable); //count 쿼리 사용
+Slice<Member> findByUsername(String name, Pageable pageable); //count 쿼리 사용 X
+List<Member> findByUsername(String name, Pageable pageable); //count 쿼리 사용 X
+List<Member> findByUsername(String name, Sort sort);
+```
+
+```java
+// page 정의 코드
+Page<Member> findByUsername(String name, Pageable pageable);
+
+// page 실행 코드
+PageRequest pageRequest = 
+        new PageRequest(0, 10, new Sort(Direction.DESC, "name"));
+
+page<Member> result = 
+        memberRepository.findByName("kim", pageRequest);
+
+List<Member> members = result.getContent();
+int totalPage = result.getTotalPages();
+boolean hasNextPage = result.hasNextPage();
+```
+
+**fetch join**
+```java
+@Query("select m from Member m left join fetch m.team")
+List<Member> findMemberFetchJoin();
+```
+
+JPA가 제공하는 엔티티 그래프 기능을 사용하여 JPQL 없이 페치 조인을 사용가능
+```java
+//공통 메서드 오버라이드
+@Override
+@EntityGraph(attributePaths = {"team"})
+List<Member> findAll();
+
+//JPQL + 엔티티 그래프
+@EntityGraph(attributePaths = {"team"})
+@Query("select m from Member m")
+List<Member> findMemberEntityGraph();
+
+//메서드 이름으로 쿼리에서 특히 편리하다.
+@EntityGraph(attributePaths = {"team"})
+List<Member> findEntityGraphByUsername(@Param("username") String username);
+```
+
+### 사용자 정의 리포지토리
+리포지토리 인터페이스 이름 + Impl
+```java
+// 사용자 정의 인터페이스
+public interface MemberRepositoryCustom {
+    List<Member> findMemberCustom();
+}
+
+// 구현 클래스
+@RequiredArgsConstructor
+public class MemberRepositoryImpl implements MemberRepositoryCustom {
+
+  private final EntityManager em;
+
+  @Override
+  public List<Member> findMemberCustom() {
+    return em.createQuery("select m from Member m")
+            .getResultList();
+  }
+}
+
+// 사용자 정의 인터페이스 상속
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom { }
+```
+TODO: 지원 방식 추가
+
+### Auditing
+**설정**
+- @EnableJpaAuditing → 스프링 부트 클래스에 적용
+- @EntityListeners(AuditingEntityListener.class) → 엔티티에 적용
+
+**적용**
+```java
+@EntityListeners(AuditingEntityListener.class)
+@MappedSuperclass
+@Getter
+public class BaseEntity {
+
+    @CreatedDate
+    @Column(updatable = false)
+    private LocalDateTime createdDate;
+    
+    @LastModifiedDate
+    private LocalDateTime lastModifiedDate;
+    
+    @CreatedBy
+    @Column(updatable = false)
+    private String createdBy;
+    
+    @LastModifiedBy
+    private String lastModifiedBy;
+}
+```
+
