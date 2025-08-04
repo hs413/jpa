@@ -2,10 +2,12 @@ package jpa.querydsl;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.querydsl.core.QueryResults;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
+import java.util.List;
 import jpa.querydsl.entity.Member;
 import jpa.querydsl.entity.QMember;
 import jpa.querydsl.entity.Team;
@@ -94,4 +96,30 @@ class QuerydslTest {
                 .fetchOne();
         assertThat(findMember.getUsername()).isEqualTo("member1");
     }
+
+    // 기본 검색
+    @Test
+    public void search() {
+        Member findMember = queryFactory
+                .selectFrom(member)
+                .where(member.username.eq("member1")
+                        .and(member.age.eq(10)))
+                .fetchOne();
+
+        assertThat(findMember.getUsername()).isEqualTo("member1");
+    }
+
+    @Test
+    public void searchAndParam() {
+        List<Member> result = queryFactory
+                .selectFrom(member)
+                .where(
+                        member.username.eq("member1"),
+                        member.age.eq(10))
+                .fetch();
+
+        assertThat(result).hasSize(1);
+    }
+
+
 }
