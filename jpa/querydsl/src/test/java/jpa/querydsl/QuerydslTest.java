@@ -3,6 +3,7 @@ package jpa.querydsl;
 import static org.assertj.core.api.Assertions.*;
 
 import com.querydsl.core.QueryResults;
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import static jpa.querydsl.entity.QMember.*;
+import static jpa.querydsl.entity.QTeam.*;
 
 @SpringBootTest
 @Transactional
@@ -29,15 +31,15 @@ class QuerydslTest {
     public void before() {
         queryFactory = new JPAQueryFactory(em);
 
-        Team teamA = new Team("Team A");
-        Team teamB = new Team("Team B");
+        Team teamA = new Team("TeamA");
+        Team teamB = new Team("TeamB");
         em.persist(teamA);
         em.persist(teamB);
 
         Member Member1 = new Member("member1", 10, teamA);
         Member Member2 = new Member("member2", 20, teamA);
-        Member Member3 = new Member("member3", 30, teamA);
-        Member Member4 = new Member("member4", 40, teamA);
+        Member Member3 = new Member("member3", 30, teamB);
+        Member Member4 = new Member("member4", 40, teamB);
 
         em.persist(Member1);
         em.persist(Member2);
@@ -171,4 +173,46 @@ class QuerydslTest {
         assertThat(results.getOffset()).isEqualTo(1);
         assertThat(results.getResults()).hasSize(2);
     }
+
+    // 집합 - 집합 함수
+    @Test
+    public void aggregation() throws Exception {
+        List<Tuple> result = queryFactory
+                .select(member.count(),
+                        member.age.sum(),
+                        member.age.avg(),
+                        member.age.max(),
+                        member.age.min())
+                .from(member)
+                .fetch();
+
+        Tuple tuple = result.get(0);
+        assertThat(tuple.get(member.count())).isEqualTo(4);
+        assertThat(tuple.get(member.age.sum())).isEqualTo(100);
+        assertThat(tuple.get(member.age.avg())).isEqualTo(25);
+        assertThat(tuple.get(member.age.max())).isEqualTo(40);
+        assertThat(tuple.get(member.age.min())).isEqualTo(10);
+    }
+
+    // 집합 - group by
+    @Test
+    public void group() throws Exception {
+        List<Tuple> result = queryFactory
+                .select(team.name, member.age.avg())
+                .from(member)
+                .join(member.team, team)
+                .groupBy(team.name)
+//                .having(member.age.gt(20))
+                .fetch();
+
+        Tuple teamA = result.get(0);
+        Tuple teamB = result.get(1);
+
+        assertThat(teamA.get(team.name)).isEqualTo("TeamA");
+        assertThat(teamA.get(member.age.avg())).isEqualTo(15);
+
+        assertThat(teamB.get(team.name)).isEqualTo("TeamB");
+        assertThat(teamB.get(member.age.avg())).isEqualTo(35);
+    }
+
 }
