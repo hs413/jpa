@@ -157,6 +157,7 @@ List<Member> result = queryFactory
 
 **세타 조인**
 - 연관관계가 없는 필드 조인
+- from 절에 여러 엔티티를 선택
 - 외부 조인 불가능 -> on을 사용하여 외부 조인
 ```java
 List<Member> result = queryFactory
@@ -166,3 +167,15 @@ List<Member> result = queryFactory
         .fetch();
 ```
 - 회원 이름과 팀 이름이 같은 회원 조회
+
+### 조인 - ON
+- 내부조인을 사용하면 where절에서 필터링 하는 것과 동일
+  - 내부조인에선 where절 사용
+  - 외부조인이 필요한 경우만 사용
+```java
+List<Tuple> result = queryFactory
+        .select(member, team)
+        .from(member)
+        .leftJoin(member.team, team).on(team.name.eq("teamA"))
+        .fetch();
+```
