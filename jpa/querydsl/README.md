@@ -251,7 +251,7 @@ List<MemberDto> result = queryFactory
 - 프로젝션에 사용될 DTO 생성자에 @QueryProjection 애너테이션을 붙여준다
   - DTO를 Q-Type으로 생성
 - 컴파일러로 타입을 체크할 수 있음
-- DTO에 QueryDSL 어노테이션을 유지해야 하고 Q파일을 생성해야 한다는 단점
+- DTO에 QueryDSL 어노테이션을 유지해야 하고 Q파일을 생성해야 하는 단점이 있다
 ```java
 // DTO 정의
 @Data
