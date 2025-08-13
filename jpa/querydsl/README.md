@@ -179,3 +179,102 @@ List<Tuple> result = queryFactory
         .leftJoin(member.team, team).on(team.name.eq("teamA"))
         .fetch();
 ```
+
+### Projection
+```java
+// 대상이 하나인 경우
+List<String> result = queryFactory
+        .select(member.username)
+        .from(member)
+        .fetch();
+
+// 대상이 둘 이상인 경우 Tuple 사용
+List<Tuple> result = queryFactory
+        .select(member.username, member.age)
+        .from(member)
+        .fetch();
+```
+### DTO 조회
+**Querydsl 빈 생성**
+```java
+// DTO 정의
+public class MemberDto {
+  private String username;
+  private int age;
+
+  public MemberDto() {
+  }
+
+  public MemberDto(String username, int age) {
+    this.username = username;
+    this.age = age;
+  }
+}
+
+// 프로퍼티 접근 
+List<MemberDto> result = queryFactory
+        .select(Projections.bean(MemberDto.class,
+                member.username,
+                member.age))
+        .from(member)
+        .fetch();
+
+// 필드 접근
+List<MemberDto> result = queryFactory
+        .select(Projections.fields(MemberDto.class,
+                member.username,
+                member.age))
+        .from(member)
+        .fetch();
+
+// 필드 접근 (별칭 사용)
+List<MemberDto> result = queryFactory
+        .select(Projections.fields(MemberDto.class,
+                member.username.as("name"),
+                ExpressionUtils.as(JPAExpressions
+                        .select(memberSub.age.max())
+                        .from(memberSub), "age")
+                )
+        ).from(member)
+        .fetch();
+
+// 생성자 접근
+List<MemberDto> result = queryFactory
+        .select(Projections.constructor(MemberDto.class,
+                member.username,
+                member.age))
+        .from(member)
+        .fetch();
+}
+```
+**@QueryProjection**
+- 프로젝션에 사용될 DTO 생성자에 @QueryProjection 애너테이션을 붙여준다
+  - DTO를 Q-Type으로 생성
+- 컴파일러로 타입을 체크할 수 있음
+- DTO에 QueryDSL 어노테이션을 유지해야 하고 Q파일을 생성해야 한다는 단점
+```java
+// DTO 정의
+@Data
+public class MemberDto {
+
+  private String username;
+  private int age;
+  public MemberDto() {
+  }
+
+  @QueryProjection
+  public MemberDto(String username, int age) {
+    this.username = username;
+    this.age = age;
+  }
+}
+
+// 활용
+List<MemberDto> result = queryFactory
+        .select(new QMemberDto(member.username, member.age))
+        .from(member)
+        .fetch();
+```
+
+
+
